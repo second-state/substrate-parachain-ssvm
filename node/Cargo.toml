@@ -65,6 +65,9 @@ polkadot-cli = { git = "https://github.com/paritytech/polkadot", branch = "rococ
 polkadot-test-service = { git = "https://github.com/paritytech/polkadot", branch = "rococo-branch" }
 polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = "rococo-branch" }
 
+# ssvm = { package = 'pallet-ssvm', git = 'https://github.com/second-state/pallet-ssvm', tag = 'v0.0.1' }
+ssvm = { package = 'pallet-ssvm', path = "../../pallet-ssvm" }
+
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "rococo-branch" }
 
