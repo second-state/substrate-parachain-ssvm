@@ -42,7 +42,7 @@ cumulus-upward-message = { git = "https://github.com/paritytech/cumulus",  defau
 cumulus-primitives = { git = "https://github.com/paritytech/cumulus",  default-features = false, rev = '4e7f138c828bcf118df1c988a400d4dac8e904d9' }
 
 # SSVM
-ssvm = { package = 'pallet-ssvm', path = "../../pallet-ssvm" }
+ssvm = { default-features = false, package = 'pallet-ssvm', path = "../../pallet-ssvm" }
 
 [build-dependencies]
 wasm-builder-runner = { package = "substrate-wasm-builder-runner", version = "1.0.6" }
