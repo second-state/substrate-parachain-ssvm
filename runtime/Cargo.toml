@@ -41,6 +41,14 @@ cumulus-message-broker = { path = "../../cumulus/message-broker", default-featur
 cumulus-upward-message = { path = "../../cumulus/upward-message", default-features = false }
 cumulus-primitives = { path = "../../cumulus/primitives", default-features = false }
 
+[dependencies.sha3]
+default-features = false
+version = '0.8'
+
+[dependencies.hash256-std-hasher]
+default-features = false
+version = '0.15.2'
+
 [build-dependencies]
 wasm-builder-runner = { package = "substrate-wasm-builder-runner", version = "1.0.6" }
 
@@ -76,6 +84,8 @@ std = [
 	"cumulus-primitives/std",
 	"cumulus-token-dealer/std",
 	"template/std",
+  'hash256-std-hasher/std',
+  'sha3/std',
 ]
 # Will be enabled by the `wasm-builder` when building the runtime for WASM.
 runtime-wasm = [

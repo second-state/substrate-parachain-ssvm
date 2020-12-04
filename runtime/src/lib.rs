@@ -8,7 +8,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use sp_api::impl_runtime_apis;
-use sp_core::OpaqueMetadata;
+use sp_core::{Hasher, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{BlakeTwo256, Block as BlockT, IdentifyAccount, IdentityLookup, Saturating, Verify},
@@ -38,6 +38,19 @@ pub use template;
 
 /// Import the message pallet.
 pub use cumulus_token_dealer;
+use cumulus_token_dealer::HashTruncateConvertAccountId;
+/// SSVM struct
+use hash256_std_hasher::Hash256StdHasher;
+use sha3::{Digest, Keccak256};
+pub struct Sha3Hasher;
+impl Hasher for Sha3Hasher {
+    type Out = sp_core::H256;
+    type StdHasher = Hash256StdHasher;
+    const LENGTH: usize = 32;
+    fn hash(x: &[u8]) -> Self::Out {
+        sp_core::H256::from_slice(Keccak256::digest(x).as_slice())
+    }
+}
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -237,6 +250,7 @@ impl cumulus_token_dealer::Trait for Runtime {
 	type UpwardMessage = cumulus_upward_message::RococoUpwardMessage;
 	type Currency = Balances;
 	type XCMPMessageSender = MessageBroker;
+  type ConvertAccountId = HashTruncateConvertAccountId<Sha3Hasher>;
 }
 
 /// Configure the pallet template in pallets/template.
@@ -259,7 +273,7 @@ construct_runtime! {
 		MessageBroker: cumulus_message_broker::{Module, Call, Inherent, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Module, Storage},
 		ParachainInfo: parachain_info::{Module, Storage, Config},
-		TokenDealer: cumulus_token_dealer::{Module, Call, Event<T>},
+		TokenDealer: cumulus_token_dealer::{Module, Call, Event<T>, Config<T>},
 		TemplateModule: template::{Module, Call, Storage, Event<T>},
 	}
 }

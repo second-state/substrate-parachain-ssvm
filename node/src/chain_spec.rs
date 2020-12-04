@@ -3,13 +3,14 @@
 use cumulus_primitives::ParaId;
 use parachain_runtime::{
 	AccountId, BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig,
-	ParachainInfoConfig, WASM_BINARY,
+	TokenDealerConfig, ParachainInfoConfig, WASM_BINARY,
 };
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::{ChainType, Properties};
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_core::H256;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
@@ -135,7 +136,15 @@ fn testnet_genesis(
 				.map(|k| (k, 1 << 60))
 				.collect(),
 		}),
-		pallet_sudo: Some(SudoConfig { key: root_key }),
+		pallet_sudo: Some(SudoConfig { key: root_key.clone() }),
 		parachain_info: Some(ParachainInfoConfig { parachain_id: id }),
+		cumulus_token_dealer: Some(TokenDealerConfig {
+			accounts: vec![],
+			storage: endowed_accounts
+				.iter()
+				.cloned()
+				.map(|k| (k, H256::zero(), H256::zero()))
+				.collect(),
+    })
 	}
 }

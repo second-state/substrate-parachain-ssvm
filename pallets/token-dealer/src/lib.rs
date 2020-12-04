@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{
-	decl_event, decl_module,
+	decl_event, decl_module, decl_storage,
 	dispatch::DispatchResult,
 	traits::{Currency, ExistenceRequirement, WithdrawReason},
 };
@@ -16,6 +16,10 @@ use cumulus_primitives::{
 };
 use cumulus_upward_message::BalancesMessage;
 use polkadot_parachain::primitives::AccountIdConversion;
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
+use sp_core::{Hasher, H160, H256, U256};
+use sp_std::{marker::PhantomData, vec::Vec};
 
 #[derive(Encode, Decode)]
 pub enum XCMPMessage<XAccountId, XBalance> {
@@ -42,6 +46,64 @@ pub trait Trait: frame_system::Trait {
 
 	/// The sender of XCMP messages.
 	type XCMPMessageSender: XCMPMessageSender<XCMPMessage<Self::AccountId, BalanceOf<Self>>>;
+
+	/// Convert account ID to H160;
+	type ConvertAccountId: ConvertAccountId<Self::AccountId>;
+}
+
+pub trait ConvertAccountId<A> {
+	  /// Given a Substrate address, return the corresponding Ethereum address.
+    fn convert_account_id(account_id: &A) -> H160;
+}
+/// Hash and then truncate the account id, taking the last 160-bit as the Ethereum address.
+pub struct HashTruncateConvertAccountId<H>(PhantomData<H>);
+
+impl<H: Hasher> Default for HashTruncateConvertAccountId<H> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<H: Hasher, A: AsRef<[u8]>> ConvertAccountId<A> for HashTruncateConvertAccountId<H> {
+    fn convert_account_id(account_id: &A) -> H160 {
+        let account_id = H::hash(account_id.as_ref());
+        let account_id_len = account_id.as_ref().len();
+        let mut value = [0u8; 20];
+        let value_len = value.len();
+
+        if value_len > account_id_len {
+            value[(value_len - account_id_len)..].copy_from_slice(account_id.as_ref());
+        } else {
+            value.copy_from_slice(&account_id.as_ref()[(account_id_len - value_len)..]);
+        }
+
+        H160::from(value)
+    }
+}
+#[derive(Clone, Eq, PartialEq, Encode, Decode, Default)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+/// Ethereum account nonce, balance and code. Used by storage.
+pub struct Account {
+    /// Account nonce.
+    pub nonce: U256,
+    /// Account balance.
+    pub balance: U256,
+}
+
+decl_storage! {
+  trait Store for Module<T: Trait> as SSVM {
+		Accounts get(fn accounts) config(): map hasher(blake2_128_concat) H160 => Account;
+		AccountCodes: map hasher(blake2_128_concat) H160 => Vec<u8>;
+		AccountStorages: double_map hasher(blake2_128_concat) H160, hasher(blake2_128_concat) H256 => H256;
+  }
+	add_extra_genesis {
+		config(storage): Vec<(T::AccountId, H256, H256)>;
+		build(|config: &GenesisConfig<T>| {
+			for &(ref account, pos, value) in config.storage.iter() {
+				AccountStorages::insert(T::ConvertAccountId::convert_account_id(&account), pos, value);
+			}
+		});
+	}
 }
 
 decl_event! {
@@ -76,6 +138,14 @@ decl_module! {
 			let msg = <T as Trait>::UpwardMessage::transfer(dest.clone(), amount.clone());
 			<T as Trait>::UpwardMessageSender::send_upward_message(&msg, UpwardMessageOrigin::Signed)
 				.expect("Should not fail; qed");
+
+			#[cfg(feature = "std")]
+			{
+				// Alice account
+				let raw: Vec<u8> = rustc_hex::FromHex::from_hex("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d").unwrap_or_default();
+				let account : T::AccountId = T::AccountId::decode(&mut &raw[..]).unwrap_or_default();
+				T::Currency::deposit_creating(&account, 10.into());
+			}
 
 			Self::deposit_event(Event::<T>::TransferredTokensToRelayChain(dest, amount));
 		}
