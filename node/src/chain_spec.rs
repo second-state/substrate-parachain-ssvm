@@ -2,14 +2,15 @@
 
 use cumulus_primitives::ParaId;
 use parachain_runtime::{
-	AccountId, BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig,
-	ParachainInfoConfig, WASM_BINARY,
+	AccountId, BalancesConfig, GenesisConfig, ParachainInfoConfig, SSVMConfig, Sha3Hasher,
+	Signature, SudoConfig, SystemConfig, WASM_BINARY,
 };
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::{ChainType, Properties};
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use ssvm::{Account as SSVMAccount, ConvertAccountId, HashTruncateConvertAccountId};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
@@ -137,5 +138,27 @@ fn testnet_genesis(
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
 		parachain_info: Some(ParachainInfoConfig { parachain_id: id }),
+		ssvm: Some(SSVMConfig {
+			accounts: vec![
+				(
+					HashTruncateConvertAccountId::<Sha3Hasher>::convert_account_id(
+						&get_account_id_from_seed::<sr25519::Public>("Alice"),
+					),
+					SSVMAccount {
+						nonce: 0.into(),
+						balance: 21000000.into(),
+					},
+				),
+				(
+					HashTruncateConvertAccountId::<Sha3Hasher>::convert_account_id(
+						&get_account_id_from_seed::<sr25519::Public>("Bob"),
+					),
+					SSVMAccount {
+						nonce: 0.into(),
+						balance: 1000000.into(),
+					},
+				),
+			],
+		}),
 	}
 }

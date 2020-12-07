@@ -43,6 +43,8 @@ cumulus-primitives = { git = "https://github.com/paritytech/cumulus",  default-f
 
 # SSVM
 ssvm = { default-features = false, package = 'pallet-ssvm', path = "../../pallet-ssvm" }
+sha3 = { default-features = false, version = "0.8" }
+hash256-std-hasher = { default-features = false, version = "0.15.2" }
 
 [build-dependencies]
 wasm-builder-runner = { package = "substrate-wasm-builder-runner", version = "1.0.6" }
