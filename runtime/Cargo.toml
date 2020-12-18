@@ -13,33 +13,33 @@ cumulus-token-dealer = { path = "../pallets/token-dealer", default-features = fa
 template = { package = "pallet-template", path = "../pallets/template", version = "2.0.0-rc5", default-features = false}
 
 # Substrate dependencies
-sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-io = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-version = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-core = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-session = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-offchain = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-transaction-pool = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-sp-inherents = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
+sp-std = { path = "../../substrate/primitives/std", default-features = false }
+sp-api = { path = "../../substrate/primitives/api", default-features = false }
+sp-io = { path = "../../substrate/primitives/io", default-features = false }
+sp-version = { path = "../../substrate/primitives/version", default-features = false }
+sp-runtime = { path = "../../substrate/primitives/runtime", default-features = false }
+sp-core = { path = "../../substrate/primitives/core", default-features = false }
+sp-session = { path = "../../substrate/primitives/session", default-features = false }
+sp-offchain = { path = "../../substrate/primitives/offchain", default-features = false }
+sp-block-builder = { path = "../../substrate/primitives/block-builder", default-features = false }
+sp-transaction-pool = { path = "../../substrate/primitives/transaction-pool", default-features = false }
+sp-inherents = { path = "../../substrate/primitives/inherents", default-features = false }
 
-frame-support = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-frame-executive = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-frame-system = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-pallet-sudo = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
-pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-branch" }
+frame-support = { path = "../../substrate/frame/support", default-features = false }
+frame-executive = { path = "../../substrate/frame/executive", default-features = false }
+frame-system = { path = "../../substrate/frame/system", default-features = false }
+pallet-balances = { path = "../../substrate/frame/balances", default-features = false }
+pallet-randomness-collective-flip = { path = "../../substrate/frame/randomness-collective-flip", default-features = false }
+pallet-timestamp = { path = "../../substrate/frame/timestamp", default-features = false }
+pallet-sudo = { path = "../../substrate/frame/sudo", default-features = false }
+pallet-transaction-payment = { path = "../../substrate/frame/transaction-payment", default-features = false }
 
 # Cumulus dependencies
-cumulus-runtime = { git = "https://github.com/paritytech/cumulus",  default-features = false, rev = '4e7f138c828bcf118df1c988a400d4dac8e904d9' }
-cumulus-parachain-upgrade = { git = "https://github.com/paritytech/cumulus",  default-features = false, rev = '4e7f138c828bcf118df1c988a400d4dac8e904d9' }
-cumulus-message-broker = { git = "https://github.com/paritytech/cumulus",  default-features = false, rev = '4e7f138c828bcf118df1c988a400d4dac8e904d9' }
-cumulus-upward-message = { git = "https://github.com/paritytech/cumulus",  default-features = false, rev = '4e7f138c828bcf118df1c988a400d4dac8e904d9' }
-cumulus-primitives = { git = "https://github.com/paritytech/cumulus",  default-features = false, rev = '4e7f138c828bcf118df1c988a400d4dac8e904d9' }
+cumulus-runtime = { path = "../../cumulus/runtime", default-features = false }
+cumulus-parachain-upgrade = { path = "../../cumulus/parachain-upgrade", default-features = false }
+cumulus-message-broker = { path = "../../cumulus/message-broker", default-features = false }
+cumulus-upward-message = { path = "../../cumulus/upward-message", default-features = false }
+cumulus-primitives = { path = "../../cumulus/primitives", default-features = false }
 
 [build-dependencies]
 wasm-builder-runner = { package = "substrate-wasm-builder-runner", version = "1.0.6" }
