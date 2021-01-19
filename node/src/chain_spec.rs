@@ -10,7 +10,7 @@ use sc_service::{ChainType, Properties};
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use ssvm::{Account as SSVMAccount, ConvertAccountId, HashTruncateConvertAccountId};
+use ssvm::{Account as SSVMAccount, Options as FundOptions, ConvertAccountId, HashTruncateConvertAccountId};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
@@ -159,6 +159,13 @@ fn testnet_genesis(
 					},
 				),
 			],
+			fund_options: FundOptions {
+				init_timestamp: 1609459200,
+				pending_round: 0,
+				unlocked_ticks: 0,
+				fraction_round: 1,
+				fraction_peroid: 1,
+			}
 		}),
 	}
 }
