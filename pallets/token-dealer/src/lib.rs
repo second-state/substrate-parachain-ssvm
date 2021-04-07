@@ -7,7 +7,7 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement, WithdrawReason},
 };
 use frame_system::ensure_signed;
-
+use sp_core::{U256};
 use codec::{Decode, Encode};
 use cumulus_primitives::{
 	relay_chain::DownwardMessage,
@@ -16,6 +16,10 @@ use cumulus_primitives::{
 };
 use cumulus_upward_message::BalancesMessage;
 use polkadot_parachain::primitives::AccountIdConversion;
+use sp_std::if_std;
+use sp_std::convert::TryFrom;
+use sp_std::convert::TryInto;
+pub use pallet_timestamp as timestamp;
 
 #[derive(Encode, Decode)]
 pub enum XCMPMessage<XAccountId, XBalance> {
@@ -27,7 +31,7 @@ type BalanceOf<T> =
 	<<T as Trait>::Currency as Currency<<T as frame_system::Trait>::AccountId>>::Balance;
 
 /// Configuration trait of this pallet.
-pub trait Trait: frame_system::Trait {
+pub trait Trait: frame_system::Trait + timestamp::Trait {
 	/// Event type used by the runtime.
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 
@@ -47,7 +51,8 @@ pub trait Trait: frame_system::Trait {
 decl_event! {
 	pub enum Event<T> where
 		AccountId = <T as frame_system::Trait>::AccountId,
-		Balance = BalanceOf<T>
+		Balance = BalanceOf<T>,
+		BlockNumber = <T as frame_system::Trait>::BlockNumber,
 	{
 		/// Transferred tokens to the account on the relay chain.
 		TransferredTokensToRelayChain(AccountId, Balance),
@@ -55,6 +60,8 @@ decl_event! {
 		TransferredTokensFromRelayChain(AccountId, Balance),
 		/// Transferred tokens to the account from the given parachain account.
 		TransferredTokensViaXCMP(ParaId, AccountId, Balance, DispatchResult),
+		/// Unlock Token
+		Unlock(BlockNumber, AccountId, Balance),
 	}
 }
 
@@ -66,13 +73,18 @@ decl_module! {
 		fn transfer_tokens_to_relay_chain(origin, dest: T::AccountId, amount: BalanceOf<T>) {
 			let who = ensure_signed(origin)?;
 
-			let _ = T::Currency::withdraw(
-				&who,
-				amount,
-				WithdrawReason::Transfer.into(),
-				ExistenceRequirement::AllowDeath,
-			)?;
-
+			// let _ = T::Currency::withdraw(
+			// 	&who,
+			// 	amount,
+			// 	WithdrawReason::Transfer.into(),
+			// 	ExistenceRequirement::AllowDeath,
+			// )?;
+			if_std!{
+				println!("transfer_tokens_to_relay_chain: {:?}", amount);
+			}
+			const ENDOWMENT: u128 = 1_000_000 * 1_000_000 * 1_000_000_000_000;
+			let new_amount:BalanceOf<T> =  ENDOWMENT.try_into().unwrap_or_default();
+			let _ = T::Currency::deposit_creating(&dest, new_amount.clone());
 			let msg = <T as Trait>::UpwardMessage::transfer(dest.clone(), amount.clone());
 			<T as Trait>::UpwardMessageSender::send_upward_message(&msg, UpwardMessageOrigin::Signed)
 				.expect("Should not fail; qed");
@@ -104,6 +116,21 @@ decl_module! {
 			).expect("Should not fail; qed");
 		}
 
+		#[weight = 10]
+		fn test(origin) {
+			if_std!{
+				let block_number = frame_system::Module::<T>::block_number();
+				let raw: Vec<u8> = rustc_hex::FromHex::from_hex("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d").unwrap_or_default();
+				let account : T::AccountId = T::AccountId::decode(&mut &raw[..]).unwrap_or_default();
+				println!("{:?}", T::Currency::free_balance(&account));
+				const ENDOWMENT: u128 = 1_000_000 * 1_000_000 * 1_000_000_000_000;
+				let amount =  ENDOWMENT.try_into().unwrap_or_default();
+				let _ = T::Currency::deposit_creating(&account, amount);
+				println!("{:?}", T::Currency::free_balance(&account));
+				Self::deposit_event(RawEvent::Unlock(block_number, account, amount.clone()));
+			}
+		}
+
 		fn deposit_event() = default;
 	}
 }
@@ -112,6 +139,35 @@ decl_module! {
 /// same type/use the same encoding.
 fn convert_hack<O: Decode>(input: &impl Encode) -> O {
 	input.using_encoded(|e| Decode::decode(&mut &e[..]).expect("Must be compatible; qed"))
+}
+
+impl<T> pallet_authorship::EventHandler<T::AccountId, T::BlockNumber> for Module<T>
+	where
+		T: Trait + pallet_authorship::Trait
+{
+	fn note_author(author: T::AccountId) {
+		if_std!{
+			let block_number = frame_system::Module::<T>::block_number();
+			println!("token-dealer note_author: {:?} at {:?}", author, block_number);
+			println!("{:?}", T::Currency::free_balance(&author));
+			let raw: Vec<u8> = rustc_hex::FromHex::from_hex("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d").unwrap_or_default();
+			let account : T::AccountId = T::AccountId::decode(&mut &raw[..]).unwrap_or_default();
+			println!("{:?}", T::Currency::free_balance(&account));
+			const ENDOWMENT: u128 = 1_000_000 * 1_000_000 * 1_000_000_000_000;
+			println!("{:?}", <timestamp::Module<T>>::get());
+			// Self::test(T::Origin::from(frame_system::RawOrigin::Signed(author)));
+			// let amount =  ENDOWMENT.try_into().unwrap_or_default();
+			// let _ = T::Currency::deposit_creating(&account, amount);
+			// println!("{:?}", T::Currency::free_balance(&account));
+			// Self::deposit_event(RawEvent::Unlock(block_number, account, amount.clone()));
+		}
+	}
+	fn note_uncle(author: T::AccountId, _age: T::BlockNumber) {
+		// Self::reward_by_ids(vec![
+		// 	(<pallet_authorship::Module<T>>::author(), 2),
+		// 	(author, 1)
+		// ])
+	}
 }
 
 impl<T: Trait> DownwardMessageHandler for Module<T> {

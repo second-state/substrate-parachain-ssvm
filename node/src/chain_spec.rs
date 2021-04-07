@@ -123,6 +123,7 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
 ) -> GenesisConfig {
+	const ENDOWMENT: u128 = 1_000_000 * 1_000_000 * 1_000_000_000_000;
 	GenesisConfig {
 		frame_system: Some(SystemConfig {
 			code: wasm_binary.to_vec(),
@@ -132,7 +133,7 @@ fn testnet_genesis(
 			balances: endowed_accounts
 				.iter()
 				.cloned()
-				.map(|k| (k, 1 << 60))
+				.map(|k| (k, ENDOWMENT))
 				.collect(),
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),

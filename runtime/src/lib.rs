@@ -244,6 +244,17 @@ impl template::Trait for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const UncleGenerations: BlockNumber = 5;
+}
+
+impl pallet_authorship::Trait for Runtime {
+	type FindAuthor = ();
+	type UncleGenerations = UncleGenerations;
+	type FilterUncle = ();
+	type EventHandler = (TokenDealer);
+}
+
 construct_runtime! {
 	pub enum Runtime where
 		Block = Block,
@@ -252,6 +263,7 @@ construct_runtime! {
 	{
 		System: frame_system::{Module, Call, Storage, Config, Event<T>},
 		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
+		Authorship: pallet_authorship::{Module, Call, Storage, Inherent},
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		Sudo: pallet_sudo::{Module, Call, Storage, Config<T>, Event<T>},
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
@@ -303,10 +315,14 @@ impl_runtime_apis! {
 		}
 
 		fn execute_block(block: Block) {
+			#[cfg(feature = "std")]
+			println!("execute_block");
 			Executive::execute_block(block)
 		}
 
 		fn initialize_block(header: &<Block as BlockT>::Header) {
+			#[cfg(feature = "std")]
+			println!("initialize_block");
 			Executive::initialize_block(header)
 		}
 	}
@@ -321,22 +337,32 @@ impl_runtime_apis! {
 		fn apply_extrinsic(
 			extrinsic: <Block as BlockT>::Extrinsic,
 		) -> ApplyExtrinsicResult {
+			#[cfg(feature = "std")]
+			println!("apply_extrinsic");
 			Executive::apply_extrinsic(extrinsic)
 		}
 
 		fn finalize_block() -> <Block as BlockT>::Header {
+			#[cfg(feature = "std")]
+			println!("finalize_block");
 			Executive::finalize_block()
 		}
 
 		fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+			#[cfg(feature = "std")]
+			println!("inherent_extrinsics");
 			data.create_extrinsics()
 		}
 
 		fn check_inherents(block: Block, data: sp_inherents::InherentData) -> sp_inherents::CheckInherentsResult {
+			#[cfg(feature = "std")]
+			println!("check_inherents");
 			data.check_extrinsics(&block)
 		}
 
 		fn random_seed() -> <Block as BlockT>::Hash {
+			#[cfg(feature = "std")]
+			println!("random_seed");
 			RandomnessCollectiveFlip::random_seed()
 		}
 	}
